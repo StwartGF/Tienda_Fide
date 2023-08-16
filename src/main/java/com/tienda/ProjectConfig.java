@@ -1,6 +1,10 @@
 package com.tienda;
 
 import static com.google.cloud.Identity.user;
+import com.tienda.dao.CategoriaDao;
+import com.tienda.domain.Categoria;
+import com.tienda.service.CategoriaService;
+import java.util.List;
 import java.util.Locale;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
@@ -15,6 +19,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
@@ -132,5 +138,40 @@ public class ProjectConfig implements WebMvcConfigurer {
 
         build.userDetailsService(userDetailsService).passwordEncoder(new BCryptPasswordEncoder());
 
+    }
+
+    @Service
+    public static class CategoriaServiceImpl implements CategoriaService {
+
+        @Autowired
+        private CategoriaDao categoriaDao;
+
+        @Override
+        @Transactional(readOnly = true)
+        public List<Categoria> getCategorias(boolean activos) {
+            lista = categoriaDao.findAll();
+            if (activos) {
+                lista.removeIf(categoriaEletemento -> !categoriaEletemento.isActivo());
+            }
+            return lista;
+        }
+
+        @Override
+        @Transactional(readOnly = true)
+        public Categoria getCategoria(Categoria categoria) {
+            return categoriaDao.findById(categoria.getIdCategoria()).orElse(null);
+        }
+
+        @Override
+        @Transactional
+        public void save(Categoria categoria) {
+            categoriaDao.save(categoria);
+        }
+
+        @Override
+        @Transactional
+        public void delete(Categoria categoria) {
+            categoriaDao.delete(categoria);
+        }
     }
 }
